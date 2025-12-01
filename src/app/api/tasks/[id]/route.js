@@ -25,25 +25,30 @@ export async function GET(req, { params }) {
 export async function PUT(req, { params }) {
   try {
     await connectDB();
-    const { title, description, dueTime, status, userId } = await req.json();
+    const { id } = params;
+    const body = await req.json();
 
-    const task = await Task.findByPk(params.id);
+    const task = await Task.findByPk(id);
     if (!task) {
-      return NextResponse.json({ error: "Tarea no encontrada" }, { status: 404 });
+      return NextResponse.json({ error: "Task no encontrada" }, { status: 404 });
     }
 
-    task.title = title || task.title;
-    task.description = description || task.description;
-    task.dueTime = dueTime || task.dueTime;
-    task.status = status || task.status;
-    task.userId = userId || task.userId;
+    const updatable = {};
+    ["title","description","dueTime","status","userId","clientId","serviceId"].forEach(k=>{
+      if (body[k] !== undefined) updatable[k] = body[k];
+    });
+    // GPS
+    if (body.latitude !== undefined && body.longitude !== undefined) {
+      updatable.latitude = body.latitude;
+      updatable.longitude = body.longitude;
+      updatable.locationUpdatedAt = new Date();
+    }
 
-    await task.save();
-
-    return NextResponse.json({ message: "Tarea actualizada correctamente", task });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Error al actualizar la tarea" }, { status: 500 });
+    await task.update(updatable);
+    return NextResponse.json(task);
+  } catch (e) {
+    console.error("PUT /tasks/[id] error:", e);
+    return NextResponse.json({ error: "Error al actualizar tarea" }, { status: 500 });
   }
 }
 
