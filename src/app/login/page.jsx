@@ -35,7 +35,7 @@ export default function LoginPage() {
       } else if (data.role === "EMPLEADO") {
         router.push("/dashboard/empleado");
       } else {
-        router.push("/dashboard"); // fallback por si no hay rol definido
+        router.push("/dashboard"); 
       }
 
     } catch (error) {
